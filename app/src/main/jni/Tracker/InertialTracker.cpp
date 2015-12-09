@@ -3,6 +3,7 @@
 //
 #include "../util/log.h"
 #include "InertialTracker.h"
+#include "boost/thread.hpp" // lock guard?
 //#include "../Pose/TfMatList.h"
 //#include "../Pose/PoseList.h"
 
@@ -22,6 +23,7 @@ InertialTracker* InertialTracker::getInstance() {
 InertialTracker::InertialTracker() : step_num_(0), last_gyro_time_(0) {
     init_done_self_ = false;
     init_done_indicator_ = false;
+    onTask = false;
     last_gyro_time_ = 0;
     imu_callback_func = boost::bind(&InertialTracker::init_callback, this, _1); // init callback to initialization callback
 }
@@ -50,17 +52,17 @@ void InertialTracker::thread_callback() {
 }
 
 void InertialTracker::periodic_task() {
+    boost::lock_guard<boost::recursive_mutex> lock_imu(m_guard_task);
+
     // post synchronization (lock mutex for conditional variable)
     if (threadRunning()) {
-        LOGD("inertialTracker thread task performed");
         timer()->expires_from_now(boost::posix_time::milliseconds(timer_interval()));
         timer()->async_wait(boost::bind(&InertialTracker::periodic_task, this));
     }
-    LOGD("inertial tracker periodic task performed");
 
-    LOGD("before popping? ");
+    //LOGD("before popping? ");
     std::vector<IMUDataPtr> imus = mStorage()->pop_imu();
-    LOGD("imu size : %d", imus.size());
+    //LOGD("imu size : %d", imus.size());
     for (int i = 0 ; i < imus.size() ; i++) {
         imu_callback_func(imus[i]);
     }
@@ -68,7 +70,9 @@ void InertialTracker::periodic_task() {
 
 void InertialTracker::step_event_handler() {
     step_num_++;
+
     // register pose graph
+
 
     // update UI
     LOGD("step detected");
@@ -104,7 +108,7 @@ void InertialTracker::track_callback(IMUDataPtr& imu_ptr) {
         case ACCEL_TYPE:
             isDetect = stepDetector.pushAndDetect(*imu_ptr);
             if(isDetect) {
-                //step_event_handler(
+                step_event_handler();
                 tfmat_list_ptr->push_imu_pose( TfMat::stepMat( imu_ptr->time() ) );
             }
             break;
@@ -112,6 +116,7 @@ void InertialTracker::track_callback(IMUDataPtr& imu_ptr) {
             // to be implemented ... ... ... ... .... ....
             GyroData *gyro_ptr = static_cast<GyroData *>(imu_ptr.get());
             tfmat_list_ptr->push_imu_pose(TfMat::integrateGyro(last_gyro_time_, *gyro_ptr));
+            last_gyro_time_ = gyro_ptr->time();
             break;
         }
         default:

@@ -50,6 +50,8 @@ public:
     static TfMatPtr make(Matrix& rot, COORDINATE_T x, COORDINATE_T y, COORDINATE_T z, TIMESTAMP_T time_val = 0);
     static TfMatPtr make(TfMat& obj);
 
+    void logging();
+
 };
 
 

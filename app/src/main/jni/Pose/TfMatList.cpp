@@ -15,6 +15,9 @@ TfMatList* TfMatList::getInstance()
 
 void TfMatList::push_imu_pose(TfMat mat) {
     boost::lock_guard<boost::recursive_mutex> lock_imu(m_guard_imu);
+    //LOGD("TFMATLIST");
+    //mat.logging();   // LOGLOGLOGLKGSJLG
+
     imu_list.push_back(TfMat::make(mat));
 
     if (!mat.getIsStep())

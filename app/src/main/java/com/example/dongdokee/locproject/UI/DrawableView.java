@@ -4,6 +4,7 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.util.Log;
 import android.widget.ImageView;
 
 /**
@@ -38,13 +39,15 @@ public class DrawableView {
         canvas = new Canvas(bitmap);
         paint = new Paint();
 
-        paint.setStrokeWidth(3);
+        paint.setStrokeWidth(1);
 
     }
 
     public void applyBitmap()
     {
-        imageView.setImageBitmap(bitmap);
+        if (imageView != null) {
+            imageView.setImageBitmap(bitmap);
+        }
     }
 
     public void clearView()
@@ -60,7 +63,7 @@ public class DrawableView {
     public void drawX(float x, float y)
     {
         canvas.drawLine(x - cross_side/2, y - cross_side/2, x + cross_side/2, y + cross_side/2, paint);
-        canvas.drawLine(x - cross_side/2, y + cross_side/2, x + cross_side/2, y - cross_side/2, paint);
+        canvas.drawLine(x - cross_side / 2, y + cross_side / 2, x + cross_side / 2, y - cross_side / 2, paint);
     }
 
     public void drawX(float[] x, float[] y)
@@ -118,4 +121,11 @@ public class DrawableView {
 
     public Bitmap getBitmap() { return bitmap; }
 
+
+    public void registerView(ImageView view) {
+        imageView = view;
+    }
+    public void unregisterView() {
+        imageView = null;
+    }
 }

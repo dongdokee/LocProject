@@ -1,5 +1,6 @@
 package com.example.dongdokee.locproject.UI;
 
+import android.util.Log;
 import android.widget.TextView;
 
 /**
@@ -16,6 +17,16 @@ public class TextableView {
 
     public void applyView()
     {
-        textView.setText(text);
+        if (textView != null) {
+            Log.i("TEXTABLE", "apply performed");
+            textView.setText(text);
+        }
+    }
+
+    public void registerView(TextView view) {
+        textView = view;
+    }
+    public void unregister() {
+        textView = null;
     }
 }

@@ -5,14 +5,16 @@
 #include "ParticleFilter.h"
 #include "../util/log.h"
 #include "../Math/Random.h"
+#include "boost/thread.hpp" // lock guard?
 //#include "../Visualizer/draw_callback.h"
 //#include "../callback/jni_stuff.h"
 
 TfMatList *ParticleFilter::tfMatList_ptr = TfMatList::getInstance();
 Parameter *ParticleFilter::parameter_ptr = Parameter::getInstance();
+UIManager *ParticleFilter::uiManager_ptr = UIManager::getInstance();
 
 void ParticleFilter::init(int timer_hz) {
-    threadRunning = false;
+    threadRunning_ = false;
     isInit = false;
 
     // set timer interval
@@ -20,16 +22,20 @@ void ParticleFilter::init(int timer_hz) {
     callback_func = boost::bind(&ParticleFilter::initParticleCallback, this);
 }
 void ParticleFilter::deinit() {
-    threadRunning = false;
+    threadRunning_ = false;
     isInit = false;
 }
 void ParticleFilter::start() {
-    thread = new boost::thread(boost::bind(&ParticleFilter::thread_callback, this));
+    ParticleFilter *filter = ParticleFilter::getInstance();
+    if (!filter->threadRunning()) {
+        filter->init(parameter_ptr->particle_filter_freq());
+        filter->thread() = new boost::thread(boost::bind(&ParticleFilter::thread_callback, filter));
+    }
 }
 
 void ParticleFilter::thread_callback() {
     LOGD("ParticleFilter thread started");
-    threadRunning = true;
+    threadRunning_ = true;
     boost::asio::io_service io;
 
     timer_ = new boost::asio::deadline_timer(io);
@@ -42,7 +48,9 @@ void ParticleFilter::thread_callback() {
     LOGD("ParticleFilter thread killed");
 }
 void ParticleFilter::periodic_task() {
-    if (threadRunning) {
+    boost::lock_guard<boost::recursive_mutex> lock_imu(m_guard_task);
+
+    if (threadRunning_) {
         LOGD("ParticleFilter thread task performed");
         timer_->expires_from_now(boost::posix_time::milliseconds(timer_interval));
         timer_->async_wait(boost::bind(&ParticleFilter::periodic_task, this));
@@ -73,22 +81,85 @@ void ParticleFilter::initParticleCallback()
         ap_x = 0.0;
         ap_y = 0.0;
         ap_z = parameter_ptr->default_height();
+
+        pose_for_traj_ptr = Pose::make();
         LOGD("ParticleFilter initialization done");
     }
 }
 void ParticleFilter::filteringCallback()
 {
     LOGD("ParticleFilter performing drawing ");
+    bool willViewUpdate = false;
+    bool willConfirm = false;
 
-    // 1. transit particles
+    // for each tf
+    std::vector<TfMatPtr> tfmat_array = tfMatList_ptr->pop_imu_tfmat();
+    for (int i = 0 ; i < tfmat_array.size() ; i++) {
+        TfMatPtr tfmat_ptr = tfmat_array[i];
+        if (tfmat_ptr->getIsStep()) {
+            willViewUpdate = true;
+            willConfirm = true;
+        } else {
+            willViewUpdate = false;
+            willConfirm = false;
+        }
+
+        std::vector<COORDINATE_T> all_x;
+        std::vector<COORDINATE_T> all_y;
+
+        for (int j = 0 ; j < particles.size() ; j++)
+        {
+            //1. transit particle
+            particles[j]->transit(*tfmat_ptr, willConfirm);
+
+            if (willConfirm)
+                particles[j]->confirm(tfmat_ptr->time(), particles[j]->x(), particles[j]->y(), 0);
+
+            if (willViewUpdate)
+            {
+                all_x.push_back(particles[j]->x());
+                all_y.push_back(particles[j]->y());
+            }
+
+        }
+
+        // measure weights
+
+        // update views
+        double *x, *y;
+        int num_elem;
+        //std::vector<COORDINATE_T> x_vector, y_vector;
+        pose_for_traj_ptr->applyTF(*tfmat_ptr);
+
+        //tfmat_ptr->logging();  // LOGDDDDDDDDDDDDDDDDDDDDDDDDDD
+        if (willViewUpdate) {
+            // update all view
+            num_elem = all_x.size();
+            x = &all_x.front();
+            y = &all_y.front();
+
+            uiManager_ptr->update_all(x, y, num_elem);
 
 
-    // 2. weight particles
+            // update best view
+            ParticlePtr best_particle_ptr = particles[0];
+//        ParticlePtr best_particle_ptr = ParticlePtr(); // something
+            num_elem = best_particle_ptr->trace().size();
+            x = &best_particle_ptr->x_traj().front();
+            y = &best_particle_ptr->y_traj().front();
+            uiManager_ptr->update_best(x, y, num_elem);
 
-    // 3. resample particle?
+            // update trajectory
+
+            uiManager_ptr->update_trajectory(pose_for_traj_ptr->x(), pose_for_traj_ptr->y());
+        }
 
 
-    draw();
+        if (willConfirm)
+        {
+            // resampling
+        }
+    }
 }
 
 void ParticleFilter::initParticles(double t) {
@@ -101,6 +172,11 @@ void ParticleFilter::initParticles(double t) {
 
     std::vector<double> xs = Random::drawUniform(-map_width/2, map_width/2, num_particles);
     std::vector<double> ys = Random::drawUniform(-map_height/2, map_height/2, num_particles);
+
+    double step_length_mu = parameter_ptr->step_length_mean();
+    double step_length_sigma = parameter_ptr->step_length_sigma();
+
+    std::vector<double> step_lengths = Random::drawNormal(step_length_mu, step_length_sigma, num_particles);
     for (int i= 0 ; i< num_particles ; i++)
     {
         ParticlePtr new_ptr = boost::make_shared<Particle>();
@@ -108,7 +184,7 @@ void ParticleFilter::initParticles(double t) {
         //z = DEFAULT_HEIGHT;
 
         double rss = 0;
-        double step_length = 0;
+        double step_length = step_lengths[i];
 
         //LOGD("%lf %lf", xs[i], ys[i]);
 
@@ -117,23 +193,4 @@ void ParticleFilter::initParticles(double t) {
         particles.push_back( new_ptr ); // (double t, double x, double y, double z, double rss, double step_length_, double visual_scale_, double weight_)
     }
 }
-void ParticleFilter::transitParticles() {
-    for (int i = 0 ; i < particles.size() ; i++)
-    {
-        particles[i]->transit();
-    }
-}
-void ParticleFilter::weightParticles() {
-    for (int i = 0 ; i < particles.size() ; i++)
-    {
-        particles[i]->measure_weight();
-    }
-}
-void ParticleFilter::resampleParticles() {
 
-}
-
-void ParticleFilter::draw()
-{
-    //draw_PF(particles, ap_x, ap_y);
-}

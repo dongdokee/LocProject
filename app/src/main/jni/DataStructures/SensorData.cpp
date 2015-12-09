@@ -19,7 +19,7 @@ SensorData::SensorData() : id_(id_count++), time_(0) {}
 SensorData::SensorData(TIMESTAMP_T t) : id_(id_count++), time_(t) {}
 SensorData::SensorData(ID_T id_val, TIMESTAMP_T t) : id_(id_val), time_(t) {}
 SensorData::~SensorData() {
-    LOGD("id %d removed", id());
+    //LOGD("id %d removed", id());
 }
 
 IMUData::IMUData() : SensorData(), x_(0), y_(0), z_(0) { }

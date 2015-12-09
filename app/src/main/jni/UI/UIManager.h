@@ -13,7 +13,10 @@ public:
     static UIManager *getInstance();
 
     void update_step(int step_num);
-    void update_specific_particle(double ap_x, double ap_y, double[] xs, double[] ys);
+    void update_trajectory(double x, double y);
+    void update_best(double x[], double y[], int num_elem);
+    void update_all(double x[], double y[], int num_elem);
+
 };
 
 

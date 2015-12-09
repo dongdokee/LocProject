@@ -13,7 +13,7 @@ import java.util.ArrayList;
  * Created by dongdokee on 2015-12-02.
  */
 public class TrajectoryView extends DrawableView {
-    public TrajectoryView(ImageView imageView_, int bitmap_width_, int bitmap_height_, int view_width_, int view_height_, int circle_radius_, int cross_side_) {
+    public TrajectoryView(ImageView imageView_, int bitmap_width_, int bitmap_height_, double view_width_, double view_height_, int circle_radius_, int cross_side_) {
         super(imageView_, bitmap_width_, bitmap_height_, circle_radius_, cross_side_);
 
         bitmap_width = bitmap_width_;

@@ -11,6 +11,7 @@
 #include "boost/function.hpp"
 #include "boost/bind.hpp"
 #include "../Pose/TfMatList.h"
+#include "boost/thread/recursive_mutex.hpp" // recursive mutex?
 
 
 class InertialTracker : public Tracker {
@@ -29,6 +30,9 @@ private:
     bool init_done_indicator_;
 
     TIMESTAMP_T last_gyro_time_;
+
+    bool onTask;
+    boost::recursive_mutex m_guard_task;
 
     InertialTracker();
 public:

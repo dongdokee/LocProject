@@ -1,5 +1,6 @@
 package com.example.dongdokee.locproject;
 
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -10,6 +11,8 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -28,8 +31,11 @@ public class MainActivity extends AppCompatActivity {
     public Map map;
 
     public UIManager uiManager;
+
+
+
     public TextView step_view;
-    public ImageView img_view;
+
 
 
     @Override
@@ -37,60 +43,35 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        //init();
-        //step_view = (TextView)findViewById(R.id.stepnum_text);
-        img_view = (ImageView)findViewById(R.id.imgView);
-        //uiManager = new UIManager(this, step_view, null);
-        //uiManager.init();
-        uiManager = new UIManager(this, step_view, img_view, img_view, img_view);
 
-        //inertialThread = new InertialThread(this, 0, 0, 0, 0);
-        //inertialThread.start();
+
+        uiManager = UIManager.getInstance();
+        uiManager.init(this, 300, 200, 30, 20, 6, 12);
+        //uiManager = new UIManager(this, 270, 200, 26, 20, 6, 12);
+
+        Button particleBtn = (Button) findViewById(R.id.particleViewBtn);
+        particleBtn.setOnClickListener(new Button.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MainActivity.this, ParticleActivity.class);
+                startActivity(intent);
+            }
+        });
+
+        inertialThread = new InertialThread(this, 0, 0, 0, 0);
+        inertialThread.start();
 
         handler = new Handler();
 
+        init();
+        uiManager.init();
+
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                //test();
-                //start_navigation();
-                //uiManager.update_trajectory_view(0, 0);
-                //uiManager.update_best_particle_view(1, 1);
-                double[] x = {1,2,3,4,5};
-                double[] y = {5,4,3,2,1};
-                uiManager.update_all_particle_view(x, y);
+                start_navigation();
             }
         }, 1000);
-/*
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                //test();
-                //start_navigation();
-                //uiManager.update_trajectory_view(0, 1);
-                uiManager.update_best_particle_view(2, 2);
-            }
-        }, 2000);
-
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                //test();
-                //start_navigation();
-                //uiManager.update_trajectory_view(1, 1);
-                uiManager.update_best_particle_view(2, 3);
-            }
-        }, 3000);
-
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                //test();
-                //start_navigation();
-                //uiManager.update_trajectory_view(2, 2);
-                uiManager.update_best_particle_view(-1, 3);
-            }
-        }, 4000);*/
     }
 
     @Override

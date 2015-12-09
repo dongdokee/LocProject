@@ -6,10 +6,27 @@
 #include "boost/make_shared.hpp"
 
 Pose::Pose() : time_(0), matrix_(4, 4), prev_rot_t_(0) {
-    matrix_.assign(IdentityMatrix(4));
+    matrix_(0, 0) = 1;
+    matrix_(0, 1) = 0;
+    matrix_(0, 2) = 0;
+    matrix_(1, 0) = 0;
+    matrix_(1, 1) = 0;
+    matrix_(1, 2) = -1;
+    matrix_(2, 0) = 0;
+    matrix_(2, 1) = 1;
+    matrix_(2, 2) = 0;
+
+    matrix_(0, 3) = 0;
+    matrix_(1, 3) = 0;
+    matrix_(2, 3) = 0;
+
+    matrix_(3, 0) = 0;
+    matrix_(3, 1) = 0;
+    matrix_(3, 2) = 0;
+
 }
 Pose::Pose(TIMESTAMP_T t, Matrix &rot, Vector &tvec, TIMESTAMP_T prev_rot_time) : time_(t), matrix_(4, 4), prev_rot_t_(prev_rot_time) {
-    subrange(matrix_, 0, 2, 0, 2) = rot;
+    subrange(matrix_, 0, 3, 0, 3) = rot;
     matrix_(0, 3) = tvec(0);
     matrix_(1, 3) = tvec(1);
     matrix_(2, 3) = tvec(2);
@@ -20,7 +37,7 @@ Pose::Pose(TIMESTAMP_T t, Matrix &rot, Vector &tvec, TIMESTAMP_T prev_rot_time) 
 }
 // imu to world rotation matrix!
 Pose::Pose(TIMESTAMP_T t, Matrix &rot, COORDINATE_T world_x, COORDINATE_T world_y, COORDINATE_T world_z, TIMESTAMP_T prev_rot_time) : time_(t), matrix_(4, 4), prev_rot_t_(prev_rot_time) {
-    subrange(matrix_, 0, 2, 0, 2) = rot;
+    subrange(matrix_, 0, 3, 0, 3) = rot;
     matrix_(0, 3) = world_x;
     matrix_(1, 3) = world_y;
     matrix_(2, 3) = world_z;
@@ -41,13 +58,19 @@ Pose::Pose(const Pose& pose_obj) {
 //    z = matrix_(2, 3);
 //}
 Matrix Pose::getRotation() {
-    return subrange(matrix_, 0, 2, 0, 2);
+    return subrange(matrix_, 0, 3, 0, 3);
 }
 void Pose::applyTF(TfMat &tfmat) {
     prod(matrix_, tfmat.rel_pose(), matrix_); // matrix = matrix * rel_pose
+
+    //Matrix& temp = tfmat.rel_pose();
+    //LOGD("applyTF %lf %lf       %lf %lf %lf %lf - %lf %lf %lf %lf - %lf %lf %lf %lf - %lf %lf %lf %lf", matrix_(0, 3), matrix_(1, 3), temp(0, 0), temp(0, 1), temp(0, 2), temp(0, 3), temp(1, 0), temp(1, 1), temp(1, 2), temp(1, 3), temp(2, 0), temp(2, 1), temp(2, 2), temp(2, 3), temp(3, 0), temp(3, 1), temp(3, 2), temp(3, 3));
 }
 
 
+PosePtr Pose::make() {
+    return boost::make_shared<Pose>();
+}
 
 PosePtr Pose::make(TIMESTAMP_T t, Matrix& rot, Vector& tvec, TIMESTAMP_T prev_rot_time) {
     return boost::make_shared<Pose>(t, rot, tvec, prev_rot_time);

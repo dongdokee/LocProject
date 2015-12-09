@@ -8,7 +8,9 @@ JavaVM *j_vm;
 JNIEnv* g_env = 0;
 jclass ui_manager_clazz;
 jmethodID ui_step_method = 0;
-jmethodID ui_one_particle_method = 0;
+jmethodID ui_best_particle_method = 0;
+jmethodID ui_all_particle_method = 0;
+jmethodID ui_trajectory_method = 0;
 jobject ui_manager_obj;
 
 // 1. caching drawing map
@@ -33,7 +35,9 @@ void cache_callbacks(JNIEnv* env) {
     jclass clazz = env->FindClass("com/example/dongdokee/locproject/UI/UIManager");
     ui_manager_clazz = (jclass)env->NewGlobalRef(clazz);
     ui_step_method = env->GetMethodID(ui_manager_clazz, "update_step", "(I)V");
-    ui_one_particle_method = env->GetMethodID(ui_Manager_clazz, "update_specific_particle", "(DD[D[D)V");
+    ui_best_particle_method = env->GetMethodID(ui_manager_clazz, "update_best_particle_view", "([D[D)V");
+    ui_all_particle_method = env->GetMethodID(ui_manager_clazz, "update_all_particle_view", "([D[D)V");
+    ui_trajectory_method = env->GetMethodID(ui_manager_clazz, "update_trajectory_view", "(DD)V");
 }
 
 

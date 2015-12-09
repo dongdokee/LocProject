@@ -45,6 +45,7 @@ public:
     COORDINATE_T y() { return matrix_(1, 3); }
     COORDINATE_T z() { return matrix_(2, 3); }
 
+    static PosePtr make();
     static PosePtr make(TIMESTAMP_T t, Matrix& rot, Vector& tvec, TIMESTAMP_T prev_rot_time);
     static PosePtr make(TIMESTAMP_T t, Matrix& rot, COORDINATE_T world_x, COORDINATE_T world_y, COORDINATE_T world_z, TIMESTAMP_T prev_rot_time);
     static PosePtr make(Pose& pose_obj);

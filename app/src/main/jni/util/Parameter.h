@@ -24,26 +24,14 @@ private:
     int inertial_tracker_freq_;
     int memory_manager_freq_;
     double stale_thresh_;
+
+    COORDINATE_T step_length_mean_;
+    COORDINATE_T step_length_sigma_;
+
+    int particle_filter_freq_;
 public:
     static Parameter* getInstance();
-    void loadDefault()
-    {
-        step_delta_t_thresh_ = 0.33;
-        step_delta_mag_thresh_ = 2.3;
-        num_particles_ = 1000;
-        default_height_ = 1.0;
-        map_width_ = 10;
-        map_height_ = 10;
-
-        inertial_tracker_freq_ = 30;
-        memory_manager_freq_ = 5; // 5 second ?
-        stale_thresh_ = 10.0; // 10 seconds
-
-
-        isLoad = true;
-
-
-    }
+    void loadDefault();
     void loadFromFile()
     {
         // not implemented yet
@@ -61,6 +49,11 @@ public:
     int &inertial_tracker_freq() { return inertial_tracker_freq_; }
     int &memory_manager_freq() { return memory_manager_freq_; }
     double &stale_thresh() { return stale_thresh_; }
+
+    COORDINATE_T &step_length_mean() { return step_length_mean_; }
+    COORDINATE_T &step_length_sigma() { return step_length_sigma_; }
+
+    int &particle_filter_freq() { return particle_filter_freq_; }
 };
 
 

@@ -12,12 +12,16 @@
 #include "boost/bind.hpp" // boost:;bind
 #include "../Pose/TfMatList.h"
 #include "../util/Parameter.h"
+#include "../UI/UIManager.h"
+#include "boost/thread/recursive_mutex.hpp" // recursive mutex?
 //#include "../Math/Random.h"
 
 class ParticleFilter {
 private:
     static TfMatList *tfMatList_ptr;
     static Parameter *parameter_ptr;
+    static UIManager *uiManager_ptr;
+
     ParticleFilter() {}
     ParticleFilter(const ParticleFilter& other) {}
 
@@ -25,26 +29,31 @@ private:
     ~ParticleFilter() {
         deinit();
         delete timer_;
-        delete thread;
+        delete thread_;
     }
 
     // thread and timing related variables
     int timer_interval;
     boost::asio::deadline_timer* timer_;
-    boost::thread* thread;
-    bool threadRunning;
+    boost::thread* thread_;
+    bool threadRunning_;
     bool isInit;
 
 
     //PoseGraph* graph_ptr;
 
     boost::recursive_mutex m_guard_particle;
+    //boost::recursive_mutex m_guard_task;
 
     // Random Util
     //RandomUtil rand_util;
 
     // filter structures
     std::vector<ParticlePtr> particles;// particles?
+    PosePtr pose_for_traj_ptr;
+
+    boost::recursive_mutex m_guard_task;
+
     // position of ap
     double ap_x;
     double ap_y;
@@ -59,7 +68,7 @@ public:
 
     void init(int timer_hz);
     void deinit();
-    void start();
+    static void start();
     void thread_callback();
     void periodic_task();
 
@@ -71,16 +80,10 @@ public:
     // filter related methods
     // 1. initial particles
     void initParticles(double t);
-    // 2. transit particles
-    void transitParticles();
-    // 3. weight particles
-    void weightParticles();
-    // 4. resampling aprticles
-    void resampleParticles();
 
 
-    // draw map (send command to UI JAVA)
-    void draw();
+    bool &threadRunning() { return threadRunning_; }
+    boost::thread* &thread() { return thread_; }
 };
 
 

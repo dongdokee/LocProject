@@ -10,31 +10,36 @@
               android:orientation="vertical"
               android:weightSum="1">
 
-    <TextView
-        android:text="@string/hello_world"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/textView"/>
+        android:gravity="center">
 
-    <ImageView
-        android:layout_width="240dp"
-        android:layout_height="320dp"
-        android:id="@+id/imgView"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true"/>
+        <SurfaceView
+            android:layout_width="300dp"
+            android:layout_height="400dp"
+            android:id="@+id/camPreview"
+            />
 
-    <Button
-        android:layout_width="wrap_content"
+    </LinearLayout>
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="test"
-        android:id="@+id/testBtn"/>
+        android:gravity="center_horizontal">
 
-    <TextView
-        android:layout_width="82dp"
-        android:layout_height="wrap_content"
-        android:text="0"
-        android:id="@+id/stepnum_text"
-        android:layout_weight="0.37"/>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="status"
+            android:id="@+id/statusView"/>
 
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Particle View"
+            android:id="@+id/particleViewBtn"/>
+    </LinearLayout>
 </LinearLayout>

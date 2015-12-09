@@ -6,7 +6,7 @@
 #include "../util/extern.h"
 #include "../util/Parameter.h"
 #include "../Tracker/InertialTracker.h"
-#include "../Pose/PoseList.h"
+#include "../Filter/ParticleFilter.h"
 #include "../Math/Random.h"
 
 
@@ -22,6 +22,7 @@ void init() {
 
 void threads_start() {
     InertialTracker::start();
+    ParticleFilter::start();
     //InertialTracker::getInstance()->start();
 }
 

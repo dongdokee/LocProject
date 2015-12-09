@@ -19,7 +19,7 @@ TfMat::TfMat(Matrix &rel_pose_mat, TIMESTAMP_T time_val) : rel_pose_(4, 4), isSt
     rel_pose_.assign(rel_pose_mat);
 }
 TfMat::TfMat(Matrix &rot, Vector &trans, TIMESTAMP_T time_val) : rel_pose_(4, 4), isStep(false), time_(time_val) {
-    subrange(rel_pose_, 0, 2, 0, 2) = rot;
+    subrange(rel_pose_, 0, 3, 0, 3) = rot;
     rel_pose_(0, 3) = trans(0);
     rel_pose_(1, 3) = trans(1);
     rel_pose_(2, 3) = trans(2);
@@ -29,7 +29,7 @@ TfMat::TfMat(Matrix &rot, Vector &trans, TIMESTAMP_T time_val) : rel_pose_(4, 4)
     rel_pose_(3, 2) = 0;
 }
 TfMat::TfMat(Matrix &rot, COORDINATE_T x, COORDINATE_T y, COORDINATE_T z, TIMESTAMP_T time_val) : rel_pose_(4, 4), isStep(false), time_(time_val) {
-    subrange(rel_pose_, 0, 2, 0, 2) = rot;
+    subrange(rel_pose_, 0, 3, 0, 3) = rot;
     rel_pose_(0, 3) = x;
     rel_pose_(1, 3) = y;
     rel_pose_(2, 3) = z;
@@ -37,6 +37,7 @@ TfMat::TfMat(Matrix &rot, COORDINATE_T x, COORDINATE_T y, COORDINATE_T z, TIMEST
     rel_pose_(3, 0) = 0;
     rel_pose_(3, 1) = 0;
     rel_pose_(3, 2) = 0;
+    //LOGD("TFMAT CONSTRUCTOR %lf/  %lf %lf %lf %lf / %lf %lf %lf %lf / %lf %lf %lf %lf / %lf %lf %lf %lf", time_val, rel_pose_(0, 0), rel_pose_(0, 1), rel_pose_(0, 2), rel_pose_(0, 3), rel_pose_(1, 0), rel_pose_(1, 1), rel_pose_(1, 2), rel_pose_(1, 3), rel_pose_(2, 0), rel_pose_(2, 1), rel_pose_(2, 2), rel_pose_(2, 3), rel_pose_(3, 0), rel_pose_(3, 1), rel_pose_(3, 2), rel_pose_(3, 3));
 }
 
 TfMat::TfMat(const TfMat &obj) {
@@ -48,6 +49,7 @@ TfMat::TfMat(const TfMat &obj) {
 TfMat TfMat::integrateGyro(TIMESTAMP_T prev_t, GyroData &gyroData) {
     TIMESTAMP_T cur_t = gyroData.time();
     TIMESTAMP_T dT = (cur_t - prev_t);
+
 
     Vector gyro(3);
     gyro(0) = gyroData.x();
@@ -72,6 +74,8 @@ TfMat TfMat::integrateGyro(TIMESTAMP_T prev_t, GyroData &gyroData) {
     deltaRotateVector(3) = cosThetaOverTwo;
 
     Matrix R = getRotationMatrixFromVector(deltaRotateVector);
+
+    //LOGD("GYRO INTEG time:%lf data:%lf@%lf@%lf / %lf %lf %lf / %lf %lf %lf / %lf %lf %lf", gyroData.time(), gyroData.x(), gyroData.y(), gyroData.z(), R(0, 0), R(0, 1), R(0, 2), R(1, 0), R(1, 1), R(1, 2), R(2, 0), R(2, 1), R(2, 2));
 
     return TfMat(R, (COORDINATE_T)0, (COORDINATE_T)0, (COORDINATE_T)0, gyroData.time());
 }
@@ -112,7 +116,7 @@ Matrix TfMat::getRotationMatrixFromVector(Vector rotationVector)
 
 void TfMat::setStepMatrix(COORDINATE_T step_length) {
     rel_pose_.assign(IdentityMatrix(4));
-    rel_pose_(2, 4) = -step_length; // ? or step_length
+    rel_pose_(2, 3) = -step_length; // ? or step_length
 }
 
 TfMat TfMat::stepMat(TIMESTAMP_T time_val) {
@@ -136,4 +140,8 @@ TfMatPtr TfMat::make(Matrix& rot, COORDINATE_T x, COORDINATE_T y, COORDINATE_T z
 }
 TfMatPtr TfMat::make(TfMat &obj) {
     return boost::make_shared<TfMat>(obj);
+}
+
+void TfMat::logging() {
+    LOGD("TfMat %lf / %lf %lf %lf %lf / %lf %lf %lf %lf / %lf %lf %lf %lf / %lf %lf %lf %lf", time_,  rel_pose_(0, 0), rel_pose_(0, 1), rel_pose_(0, 2), rel_pose_(0, 3), rel_pose_(1, 0), rel_pose_(1, 1), rel_pose_(1, 2), rel_pose_(1, 3), rel_pose_(2, 0), rel_pose_(2, 1), rel_pose_(2, 2), rel_pose_(2, 3), rel_pose_(3, 0), rel_pose_(3, 1), rel_pose_(3, 2), rel_pose_(3, 3));
 }
